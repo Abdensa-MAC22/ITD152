@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Database Management System</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f2f2f2;
+        margin: 0;
+    }
+    header {
+        background: #2c3e50;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+    }
+    nav {
+        background: #34495e;
+        padding: 10px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+    nav button {
+        padding: 10px 15px;
+        background: #4e657a;
+        color: white;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+    }
+    nav button:hover {
+        background: #6c839a;
+    }
+    .container {
+        padding: 20px;
+    }
+    h2 {
+        border-left: 5px solid #34495e;
+        padding-left: 10px;
+        color: #34495e;
+    }
+    .btn {
+        padding: 8px 14px;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        border: none;
+    }
+    .btn-primary { background: #2980b9; }
+    .btn-warning { background: #f39c12; }
+    .btn-danger { background: #c0392b; }
+    table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+        background: white;
+    }
+    table th, table td {
+        border: 1px solid #cfcfcf;
+        padding: 10px;
+        text-align: center;
+    }
+    table th {
+        background: #e0e0e0;
+    }
+    .section { display: none; }
+
+    .btn-success { background: #27ae60; }
+
+    .btn-secondary {
+    background: #7f8c8d;
+    color: white;
+}
+
+
+/* MODAL CONTENT BOX */
+.modal-content {
+    background-color: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    animation: slideDown 0.3s ease-out;
+}
+
+/* BUTTONS IN MODAL */
+.modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* simple animation */
+@keyframes slideDown {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* INPUTS & SELECTS */
+.modal-content input,
+.modal-content select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+
+
+</style>
+</head>
+<body>
+
+<!-- CREATE DATABASE MODAL -->
+<div id="createDbModal" class="modal">
+    <div class="modal-content">
+        <h3>Create Database</h3>
+
+        <label>Database Name</label>
+        <input type="text" id="dbNameInput" placeholder="Enter database name">
+
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="submitCreateDb()">Create</button>
+            <button class="btn btn-danger" onclick="closeCreateDb()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+
+    <!-- GENERIC MODAL -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle"></h3>
+        <div id="modalBody"></div>
+
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="modalSubmit">Submit</button>
+            <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+
+<header>DATABASE MANAGEMENT SYSTEM</header>
+
+<nav>
+    <button onclick="showSection('primary')">Primary Databases</button>
+    <button onclick="showSection('backup')">Backup Databases</button>
+    <button onclick="showSection('users')">User Management</button>
+</nav>
+
+<div class="container">
+
+    <!-- PRIMARY DB SECTION -->
+    <div id="primary" class="section">
+        <h2>PRIMARY DATABASE</h2>
+        <button class="btn btn-primary" onclick="openCreateDb()">CREATE DATABASE</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>DATABASE NAME</th>
+                    <th>TABLES</th>
+                    <th>SIZE (KB)</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="primaryTable"></tbody>
+        </table>
+    </div>
+
+    <!-- BACKUP DB SECTION -->
+    <div id="backup" class="section">
+        <h2>BACKUP DATABASES</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>FILE</th>
+                    <th>SIZE (KB)</th>
+                    <th>MODIFIED</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="backupTable"></tbody>
+        </table>
+    </div>
+
+    <!-- USER MANAGEMENT SECTION -->
+    <div id="users" class="section">
+        <h2>USER MANAGEMENT</h2>
+        <button class="btn btn-primary" onclick="createUser()">CREATE USER</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>USERNAME</th>
+                    <th>HOST</th>
+                    <th>ACTIONS</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="userTable"></tbody>
+        </table>
+    </div>
+
+    <!-- DROP DATABASE MODAL -->
+<div id="dropDbModal" class="modal">
+    <div class="modal-content">
+        <h3>Drop Database</h3>
+        <p>Are you sure you want to drop the database <strong id="dropDbName"></strong>?</p>
+
+        <div class="modal-actions">
+            <button class="btn btn-danger" id="confirmDropDbBtn">Drop</button>
+            <button class="btn btn-secondary" onclick="closeDropDb()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- BACKUP DATABASE MODAL -->
+<div id="backupDbModal" class="modal">
+    <div class="modal-content">
+        <h3>Backup Database</h3>
+        <p>Do you want to create a backup for <strong id="backupDbName"></strong>?</p>
+
+        <div class="modal-actions">
+            <button class="btn btn-success" id="confirmBackupDbBtn">Backup</button>
+            <button class="btn btn-secondary" onclick="closeBackupDb()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- INFO MODAL -->
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <h3 id="infoTitle"></h3>
+        <p id="infoMessage"></p>
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="closeInfoModal()">OK</button>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<script>
+/* ----------------------- UI NAVIGATION ----------------------- */
+function showSection(id) {
+    document.querySelectorAll(".section").forEach(div => div.style.display = "none");
+    document.getElementById(id).style.display = "block";
+}
+
+/* ----------------------- API HELPER -------------------------- */
+const API_BASE = "http://127.0.0.1:5000/";
+
+async function apiPOST(url, body) {
+    const resp = await fetch(API_BASE + url, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(body)
+    });
+    return resp.json();
+}
+
+/* ----------------------- MODAL HANDLER ----------------------- */
+function openModal(title, bodyHTML, onSubmit) {
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalBody").innerHTML = bodyHTML;
+
+    const submitBtn = document.getElementById("modalSubmit");
+    submitBtn.onclick = onSubmit;
+
+    document.getElementById("modal").style.display = "flex";
+}
+
+function closeModal() {
+    document.getElementById("modal").style.display = "none";
+}
+
+/* ----------------------- INFO MODAL ----------------------- */
+function openInfoModal(title, message) {
+    document.getElementById("infoTitle").innerText = title;
+    document.getElementById("infoMessage").innerHTML = message;
+    document.getElementById("infoModal").style.display = "flex";
+}
+
+function closeInfoModal() {
+    document.getElementById("infoModal").style.display = "none";
+}
+
+
+/* ----------------------- CREATE DB MODAL ----------------------- */
+function openCreateDb() {
+    document.getElementById("dbNameInput").value = "";
+    document.getElementById("createDbModal").style.display = "flex";
+}
+
+function closeCreateDb() {
+    document.getElementById("createDbModal").style.display = "none";
+}
+
+async function submitCreateDb() {
+    const name = document.getElementById("dbNameInput").value.trim();
+
+    if (!name) {
+        openInfoModal("Error", "Database name is required!");
+        return;
+    }
+
+    const res = await apiPOST("create_db", { database: name });
+
+    if (res.success) {
+        closeCreateDb();
+
+        // ✅ SUCCESS MODAL (same style as Drop & Backup)
+        openInfoModal(
+            "Database Created",
+            `Database <strong>${name}</strong> was created successfully.`
+        );
+
+        loadDatabases();
+    } else {
+        openInfoModal("Error", res.error);
+    }
+}
+
+
+/* ----------------------- LOAD PRIMARY DBS ----------------------- */
+async function loadDatabases() {
+    const res = await fetch(API_BASE + "list_databases");
+    const data = await res.json();
+
+    const tbody = document.getElementById("primaryTable");
+    tbody.innerHTML = "";
+
+    if (!data.databases) return;
+
+    data.databases.forEach(db => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${db.name}</td>
+            <td>${db.tables}</td>
+            <td>${db.size_kb}</td>
+            <td>
+                    <button class="btn btn-success" onclick="createTable('${db.name}')">Table</button>
+                    <button class="btn btn-secondary" onclick="viewTables('${db.name}')">View</button>
+                    <button class="btn btn-warning" onclick="openBackupDb('${db.name}')">Backup</button>
+                    <button class="btn btn-danger" onclick="openDropDb('${db.name}')">Drop</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+
+/* ----------------------- LOAD BACKUP FILES ----------------------- */
+async function loadBackups() {
+    const res = await fetch(API_BASE + "list_backups");
+    const data = await res.json();
+
+    const tbody = document.getElementById("backupTable");
+    tbody.innerHTML = "";
+
+    (data.backups || []).forEach(file => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${file.file}</td>
+            <td>${file.size_kb}</td>
+            <td>${file.modified}</td>
+            <td>
+                <button class="btn btn-primary" onclick="restoreBackup('${file.file}')">Restore</button>
+                <button class="btn btn-danger" onclick="deleteBackup('${file.file}')">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+/* ----------------------- BACKUP DB MODAL ----------------------- */
+async function openBackupDb(database) {
+    dbToBackup = database;
+    document.getElementById("backupDbName").innerText = database;
+    document.getElementById("backupDbModal").style.display = "flex";
+
+    document.getElementById("confirmBackupDbBtn").onclick = async () => {
+        const res = await apiPOST("backup_db", { database: dbToBackup });
+        if (res.success) {
+            closeBackupDb();
+            openInfoModal("Backup Created", `Backup created successfully: <strong>${res.file}</strong>`);
+            loadBackups();
+        } else {
+            openInfoModal("Error", res.error);
+        }
+    };
+}
+
+
+/*---------------------- CREATE TABLE ----------------------- */
+function createTable(database) {
+    openModal(
+        "Create Table",
+        `
+        <label>Table Name</label>
+        <input type="text" id="tableName">
+
+        <label>Number of Columns</label>
+        <input type="number" id="colCount" min="1">
+        `,
+        async () => {
+            const tableName = document.getElementById("tableName").value.trim();
+            const colCount = parseInt(document.getElementById("colCount").value, 10);
+
+            if (!tableName || !colCount) {
+                alert("All fields are required");
+                return;
+            }
+
+            closeModal();
+            buildColumns(database, tableName, colCount);
+        }
+    );
+}
+
+/* ----------------------- VIEW TABLES ----------------------- */
+async function viewTables(database) {
+    const res = await apiPOST("list_tables", { database });
+    
+    if (res.success) {
+        const tables = res.tables || [];
+        const tableHTML = tables.length
+            ? `<ul>
+                ${tables.map(t => `
+                    <li>
+                        ${t} 
+                        <button class="btn btn-warning" onclick="renameTable('${database}','${t}')">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteTable('${database}','${t}')">Delete</button>
+                    </li>
+                `).join('')}
+              </ul>`
+            : "<p>No tables found.</p>";
+
+        openInfoModal(`Tables in ${database}`, tableHTML);
+    } else {
+        openInfoModal("Error", res.error);
+    }
+}
+
+/* ----------------------- RENAME TABLE ----------------------- */
+async function renameTable(database, oldName) {
+    openModal(
+        "Rename Table",
+        `
+        <label>New Table Name</label>
+        <input type="text" id="newTableName" value="${oldName}">
+        `,
+        async () => {
+            const newName = document.getElementById("newTableName").value.trim();
+            if (!newName) {
+                alert("Table name is required");
+                return;
+            }
+
+            const res = await apiPOST("rename_table", { database, old_name: oldName, new_name: newName });
+            closeModal();
+
+            if (res.success) {
+                openInfoModal("Table Renamed", `Table <strong>${oldName}</strong> renamed to <strong>${newName}</strong>`);
+                loadDatabases();
+            } else {
+                openInfoModal("Error", res.error);
+            }
+        }
+    );
+}
+
+
+/* ----------------------- DELETE TABLE ----------------------- */
+async function deleteTable(database, table) {
+    openModal(
+        "Delete Table",
+        `<p>Are you sure you want to delete table <strong>${table}</strong>?</p>`,
+        async () => {
+            const res = await apiPOST("drop_table", { database, table });
+            closeModal();
+
+            if (res.success) {
+                openInfoModal("Table Deleted", `Table <strong>${table}</strong> has been deleted.`);
+                loadDatabases();
+            } else {
+                openInfoModal("Error", res.error);
+            }
+        }
+    );
+}
+
+
+/* ----------------------- BUILD COLUMNS ----------------------- */
+async function buildColumns(database, tableName, count) {
+    const columns = [];
+
+    for (let i = 0; i < count; i++) {
+        await new Promise(resolve => {
+            openModal(
+                `Column ${i+1}`,
+                `
+                <label>Name</label>
+                <input id="colName">
+
+                <label>Type</label>
+                <select id="colType">
+                    <option>INT</option>
+                    <option>VARCHAR</option>
+                    <option>TEXT</option>
+                    <option>DATE</option>
+                    <option>TIMESTAMP</option>
+                </select>
+
+                <label>Length (VARCHAR only)</label>
+                <input id="colLength">
+
+                <label>
+                    <input type="checkbox" id="colPK"> Primary Key
+                </label>
+
+                <label>
+                    <input type="checkbox" id="colAI"> Auto Increment
+                </label>
+                `,
+                () => {
+                    columns.push({
+                        name: document.getElementById("colName").value,
+                        type: document.getElementById("colType").value,
+                        length: document.getElementById("colLength").value,
+                        primary: document.getElementById("colPK").checked,
+                        auto_increment: document.getElementById("colAI").checked
+                    });
+
+                    closeModal();
+                    resolve();
+                }
+            );
+        });
+    }
+
+    const res = await apiPOST("create_table", {
+        database,
+        table: tableName,
+        columns
+    });
+
+    if (res.success) {
+    // Close any remaining modals
+    closeModal();
+
+    // ✅ Show success modal
+    openInfoModal(
+        "Table Created",
+        `Table <strong>${tableName}</strong> was created successfully in database <strong>${database}</strong>.`
+    );
+
+    loadDatabases();
+} else {
+    openInfoModal("Error", res.error);
+}
+
+}
+
+/* ----------------------- DROP DB MODAL ----------------------- */
+let dbToDrop = ""; // hold the selected DB
+
+function openDropDb(database) {
+    dbToDrop = database;
+    document.getElementById("dropDbName").innerText = database;
+    document.getElementById("dropDbModal").style.display = "flex";
+
+    document.getElementById("confirmDropDbBtn").onclick = async () => {
+        const res = await apiPOST("drop_db", { database: dbToDrop });
+        if (res.success) {
+            alert("Database dropped!");
+            closeDropDb();
+            loadDatabases();
+        } else {
+            alert("Error: " + res.error);
+        }
+    };
+}
+
+function closeDropDb() {
+    document.getElementById("dropDbModal").style.display = "none";
+    dbToDrop = "";
+}
+
+/* ----------------------- DROP DB MODAL ----------------------- */
+function openDropDb(database) {
+    dbToDrop = database;
+    document.getElementById("dropDbName").innerText = database;
+    document.getElementById("dropDbModal").style.display = "flex";
+
+    document.getElementById("confirmDropDbBtn").onclick = async () => {
+        const res = await apiPOST("drop_db", { database: dbToDrop });
+        if (res.success) {
+            closeDropDb();
+            openInfoModal("Database Dropped", `Database <strong>${dbToDrop}</strong> has been dropped successfully.`);
+            loadDatabases();
+        } else {
+            openInfoModal("Error", res.error);
+        }
+    };
+}
+
+/* ----------------------- BACKUP DB MODAL ----------------------- */
+let dbToBackup = "";
+
+function openBackupDb(database) {
+    dbToBackup = database;
+    document.getElementById("backupDbName").innerText = database;
+    document.getElementById("backupDbModal").style.display = "flex";
+
+    document.getElementById("confirmBackupDbBtn").onclick = async () => {
+        const res = await apiPOST("backup_db", { database: dbToBackup });
+
+        if (res.success) {
+            closeBackupDb();
+
+            // ✅ SUCCESS MODAL (same style as DROP)
+            openInfoModal(
+                "Backup Created",
+                `Backup for <strong>${dbToBackup}</strong> was created successfully.<br>
+                 File: <strong>${res.file}</strong>`
+            );
+
+            loadBackups();
+        } else {
+            openInfoModal("Error", res.error);
+        }
+    };
+}
+
+
+function closeBackupDb() {
+    document.getElementById("backupDbModal").style.display = "none";
+    dbToBackup = "";
+}
+
+
+/* ----------------------- RESTORE DB ----------------------- */
+async function restoreBackup(file) {
+    // Ask for target database name using modal
+    openModal(
+        "Restore Backup",
+        `<label>Restore to database name:</label>
+         <input type="text" id="restoreDbName" placeholder="Enter database name">`,
+        async () => {
+            const target = document.getElementById("restoreDbName").value.trim();
+            if (!target) {
+                alert("Database name is required!");
+                return;
+            }
+
+            closeModal();
+
+            const res = await apiPOST("restore", { file: file, target_db: target });
+            if (res.success) {
+                openInfoModal(
+                    "Database Restored",
+                    `Backup <strong>${file}</strong> has been successfully restored to <strong>${target}</strong>.`
+                );
+                loadDatabases();
+                loadBackups();
+            } else {
+                openInfoModal("Error", res.error);
+            }
+        }
+    );
+}
+
+/* ----------------------- DELETE BACKUP ----------------------- */
+async function deleteBackup(file) {
+    openModal(
+        "Delete Backup",
+        `<p>Are you sure you want to delete backup <strong>${file}</strong>?</p>`,
+        async () => {
+            const res = await apiPOST("delete_backup", { file });
+            if (res.success) {
+                closeModal();
+                openInfoModal(
+                    "Backup Deleted",
+                    `Backup <strong>${file}</strong> has been successfully deleted.`
+                );
+                loadBackups();
+            } else {
+                closeModal();
+                openInfoModal("Error", res.error);
+            }
+        }
+    );
+}
+
+
+/* ----------------------- LOAD USERS ----------------------- */
+async function loadUsers() {
+    const res = await fetch(API_BASE + "list_users");
+    const data = await res.json();
+    const tbody = document.getElementById("userTable");
+    tbody.innerHTML = "";
+
+    (data.users || []).forEach(user => {
+        const privs = user.privileges.map(p => `${p.database}: ${p.privileges}`).join("; ");
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${user.user}</td>
+            <td>${user.host}</td>
+            <td>${privs}</td>
+            <td>
+                <button class="btn btn-warning" onclick="grantPrivileges('${user.user}','${user.host}')">Grant</button>
+                <button class="btn btn-danger" onclick="dropUser('${user.user}','${user.host}')">Drop</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+/* ----------------------- CREATE USER ----------------------- */
+async function createUser() {
+    const username = prompt("Enter username:");
+    if (!username) return;
+
+    const res = await fetch(API_BASE + "create_user", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username})
+    });
+    const data = await res.json();
+    if (data.success) {
+        alert("User created!");
+        loadUsers();
+    } else {
+        alert("Error: " + data.error);
+    }
+}
+
+/* ----------------------- DROP USER ----------------------- */
+async function dropUser(username, host) {
+    if (!confirm(`Drop user ${username}?`)) return;
+
+    const res = await fetch(API_BASE + "drop_user", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username, host})
+    });
+    const data = await res.json();
+    if (data.success) {
+        alert("User dropped.");
+        loadUsers();
+    } else {
+        alert("Error: " + data.error);
+    }
+}
+
+/* ----------------------- GRANT PRIVILEGES ----------------------- */
+async function grantPrivileges(username, host) {
+    const database = prompt("Enter database (default *):") || "*";
+    const privileges = prompt("Enter privileges (default INSERT, UPDATE, DELETE, CREATE):") || "INSERT, UPDATE, DELETE, CREATE";
+
+    const res = await fetch(API_BASE + "grant_privileges", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username, host, database, privileges})
+    });
+    const data = await res.json();
+    if (data.success) {
+        alert("Privileges granted.");
+        loadUsers();
+    } else {
+        alert("Error: " + data.error);
+    }
+}
+
+/* ----------------------- REVOKE PRIVILEGES ----------------------- */
+async function revokePrivileges(username, host) {
+    const database = prompt("Enter database (default *):") || "*";
+    const privileges = prompt("Enter privileges (default INSERT, UPDATE, DELETE, CREATE):") || "INSERT, UPDATE, DELETE, CREATE";
+
+    const res = await fetch(API_BASE + "revoke_privileges", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username, host, database, privileges})
+    });
+    const data = await res.json();
+    if (data.success) {
+        alert("Privileges revoked.");
+        loadUsers();
+    } else {
+        alert("Error: " + data.error);
+    }
+}
+
+/* ----------------------- INIT ----------------------- */
+document.addEventListener("DOMContentLoaded", () => {
+    loadDatabases();
+    loadBackups();
+    loadUsers();
+    showSection("primary");
+});
+</script>
+
+</body>
+</html>
